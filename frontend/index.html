@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Real-World App</title>
+</head>
+<body>
+  <h1>Real-World App Frontend</h1>
+  <ul id="users"></ul>
+
+  <script>
+    fetch('http://localhost:3000/api/users')
+      .then(res => res.json())
+      .then(data => {
+        const ul = document.getElementById('users');
+        data.forEach(user => {
+          const li = document.createElement('li');
+          li.textContent = `${user.id}: ${user.name}`;
+          ul.appendChild(li);
+        });
+      });
+  </script>
+</body>
+</html>
