@@ -53,9 +53,9 @@ pipeline {
 
         stage('Update GitOps Repo') {
             steps {
-                sh 'git clone https://github.com/<your-username>/realworld-app-gitops.git temp-gitops'
-                sh 'cd temp-gitops && sed -i "s|image:.*|image: <dockerhub-username>/backend:latest|" K8S/backend/deployment.yaml'
-                sh 'cd temp-gitops && sed -i "s|image:.*|image: <dockerhub-username>/frontend:latest|" K8S/frontend/deployment.yaml'
+                sh 'git clone https://github.com/devkelzs/kubernetes-k8-manifest.git temp-gitops'
+                sh 'cd temp-gitops && sed -i "s|image:.*|image: kellynkwain/backend:latest|" K8S/backend/deployment.yaml'
+                sh 'cd temp-gitops && sed -i "s|image:.*|image: kellynkwain/frontend:latest|" K8S/frontend/deployment.yaml'
                 sh 'cd temp-gitops && git add . && git commit -m "Update Docker images" && git push'
             }
         }
