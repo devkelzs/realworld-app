@@ -4,7 +4,7 @@ pipeline {
     environment {
         DOCKER_HUB_USER = 'kellynkwain'
         APP_NAME = 'realworld-app'
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // Docker Hub credentials
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
     }
 
     stages {
@@ -51,26 +51,25 @@ pipeline {
             }
         }
 
-        stage('Update GitOps Repo') {
+        stage('Update K8S Manifests & Push') {
             steps {
                 withCredentials([usernamePassword(credentialsId: 'github-credentials', usernameVariable: 'GIT_USER', passwordVariable: 'GIT_TOKEN')]) {
                     sh '''
-                        rm -rf temp-gitops
-                        git clone https://${GIT_USER}:${GIT_TOKEN}@github.com/devkelzs/kubernetes-k8-manifest.git temp-gitops
-                        cd temp-gitops
-
-                        # Update backend deployment
-                        sed -i "s|image:.*realworld-app-backend:.*|image: ${DOCKER_HUB_USER}/${APP_NAME}-backend:latest|" K8S/backend/deployment.yaml
-
-                        # Update frontend deployment
-                        sed -i "s|image:.*realworld-app-frontend:.*|image: ${DOCKER_HUB_USER}/${APP_NAME}-frontend:latest|" K8S/frontend/deployment.yaml
-
+                        # Configure git user
                         git config user.email "jenkins@ci.local"
                         git config user.name "Jenkins CI"
 
-                        git add .
+                        # Update backend image in K8S folder
+                        sed -i "s|image:.*realworld-app-backend:.*|image: ${DOCKER_HUB_USER}/${APP_NAME}-backend:latest|" K8S/backend/deployment.yaml
+
+                        # Update frontend image in K8S folder
+                        sed -i "s|image:.*realworld-app-frontend:.*|image: ${DOCKER_HUB_USER}/${APP_NAME}-frontend:latest|" K8S/frontend/deployment.yaml
+
+                        # Commit changes
+                        git add K8S/backend/deployment.yaml K8S/frontend/deployment.yaml
                         git commit -m "Update Docker images to latest"
-                        git push origin main
+                        # Push using credentials
+                        git push https://${GIT_USER}:${GIT_TOKEN}@github.com/devkelzs/realworld-app.git HEAD:main
                     '''
                 }
             }
