@@ -53,8 +53,10 @@ pipeline {
 
         stage('Update GitOps Repo') {
             steps {
-                echo "Here we would update Kubernetes manifests repo with new image tags"
-                // Optional: script to commit/push changes to kubernetes-k8-manifest repo
+                sh 'git clone https://github.com/<your-username>/realworld-app-gitops.git temp-gitops'
+                sh 'cd temp-gitops && sed -i "s|image:.*|image: <dockerhub-username>/backend:latest|" K8S/backend/deployment.yaml'
+                sh 'cd temp-gitops && sed -i "s|image:.*|image: <dockerhub-username>/frontend:latest|" K8S/frontend/deployment.yaml'
+                sh 'cd temp-gitops && git add . && git commit -m "Update Docker images" && git push'
             }
         }
     }
