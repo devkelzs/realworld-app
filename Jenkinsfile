@@ -2,9 +2,9 @@ pipeline {
     agent any
 
     environment {
-        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials')
         DOCKER_HUB_USER = 'kellynkwain'
         APP_NAME = 'realworld-app'
+        DOCKERHUB_CREDENTIALS = credentials('dockerhub-credentials') // username/password type
     }
 
     stages {
@@ -18,7 +18,11 @@ pipeline {
             steps {
                 dir('backend') {
                     sh 'npm install'
-                    sh 'npm test || echo "No tests configured"'
+                    sh '''
+                        if [ -f package.json ]; then
+                            npm test || echo "No tests configured"
+                        fi
+                    '''
                 }
             }
         }
@@ -27,10 +31,9 @@ pipeline {
             steps {
                 dir('backend') {
                     script {
+                        sh "docker login -u $DOCKER_HUB_USER -p $DOCKERHUB_CREDENTIALS_PSW"
                         sh "docker build -t $DOCKER_HUB_USER/$APP_NAME-backend:latest ."
-                        withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                            sh "docker push $DOCKER_HUB_USER/$APP_NAME-backend:latest"
-                        }
+                        sh "docker push $DOCKER_HUB_USER/$APP_NAME-backend:latest"
                     }
                 }
             }
@@ -40,10 +43,9 @@ pipeline {
             steps {
                 dir('frontend') {
                     script {
+                        sh "docker login -u $DOCKER_HUB_USER -p $DOCKERHUB_CREDENTIALS_PSW"
                         sh "docker build -t $DOCKER_HUB_USER/$APP_NAME-frontend:latest ."
-                        withDockerRegistry([credentialsId: 'dockerhub-credentials', url: '']) {
-                            sh "docker push $DOCKER_HUB_USER/$APP_NAME-frontend:latest"
-                        }
+                        sh "docker push $DOCKER_HUB_USER/$APP_NAME-frontend:latest"
                     }
                 }
             }
@@ -52,7 +54,7 @@ pipeline {
         stage('Update GitOps Repo') {
             steps {
                 echo "Here we would update Kubernetes manifests repo with new image tags"
-                // Later: script to commit/push changes to kubernetes-k8-manifest repo
+                // Optional: script to commit/push changes to kubernetes-k8-manifest repo
             }
         }
     }
