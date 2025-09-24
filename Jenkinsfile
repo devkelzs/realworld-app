@@ -15,12 +15,10 @@ pipeline {
         }
 
         stage('Backend - Build & Test') {
-            steps {
-                dir('backend') {
+            
                     sh 'mvn clean package -DskipTests'
                     sh 'mvn test'
-                }
-            }
+             
         }
 
         stage('Frontend - Build') {
